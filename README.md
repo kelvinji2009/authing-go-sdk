@@ -75,3 +75,5 @@ func printJSON(v interface{}) {
 
 ### Thanks
 [Go GraphQL Client](https://github.com/shurcooL/graphql)
+[Simple low-level GraphQL HTTP client for Go](https://github.com/machinebox/graphql)
+
