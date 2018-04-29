@@ -120,6 +120,7 @@ func (c *Client) logf(format string, args ...interface{}) {
 	c.Log(fmt.Sprintf(format, args...))
 }
 
+// Get access token by appSeceret
 func getAccessTokenByAppSecret(client *graphql.Client, clientID string, appSecret string) (string, error) {
 	var q struct {
 		GetAccessTokenByAppSecret graphql.String `graphql:"getAccessTokenByAppSecret(secret: $secret, clientId: $id)"`
@@ -139,6 +140,7 @@ func getAccessTokenByAppSecret(client *graphql.Client, clientID string, appSecre
 	return accessToken, err
 }
 
+// Encrypt password with PKCS1v15 and encode the encrypted password by base64
 func encryptPassword(password []byte) string {
 	block, _ := pem.Decode([]byte(pubPEM))
 	if block == nil {
@@ -163,7 +165,7 @@ func encryptPassword(password []byte) string {
 
 //------------------------------------------------------------------------------------
 
-// UserRegisterInput ...
+// UserRegisterInput user register mutation parameters needed to fill
 type UserRegisterInput struct {
 	Email            graphql.String `json:"email"`
 	Phone            graphql.String `json:"phone"`
@@ -171,7 +173,7 @@ type UserRegisterInput struct {
 	RegisterInClient graphql.String `json:"registerInClient"` // FIXME: Mandotory
 }
 
-// UserRegisterMutation ...
+// UserRegisterMutation user register mutation
 type UserRegisterMutation struct {
 	Register struct {
 		Unionid          graphql.String
@@ -187,7 +189,7 @@ type UserRegisterMutation struct {
 	} `graphql:"register(userInfo: $userInfo)"`
 }
 
-// Register ...
+// Register new user in your app
 func (c *Client) Register(input *UserRegisterInput) (UserRegisterMutation, error) {
 	var m UserRegisterMutation
 
@@ -214,7 +216,7 @@ func (c *Client) Register(input *UserRegisterInput) (UserRegisterMutation, error
 
 //------------------------------------------------------------------------------------
 
-// UserLoginInput ...
+// UserLoginInput user login mutation parameters needed to fill
 type UserLoginInput struct {
 	Unionid          graphql.String `json:"unionid"`
 	Email            graphql.String `json:"email"`
@@ -225,7 +227,7 @@ type UserLoginInput struct {
 	VerifyCode       graphql.String `json:"verifyCode,omitempty"`
 }
 
-// UserLoginMutation ...
+// UserLoginMutation user login mutation
 type UserLoginMutation struct {
 	Login struct {
 		ID             graphql.String `graphql:"_id"`
@@ -248,7 +250,7 @@ type UserLoginMutation struct {
 	} `graphql:"login(unionid: $unionid, email: $email, phone: $phone, password: $password, lastIP: $lastIP, registerInClient: $registerInClient, verifyCode: $verifyCode)"`
 }
 
-// Login ...
+// Login your app
 func (c *Client) Login(input *UserLoginInput) (UserLoginMutation, error) {
 	var m UserLoginMutation
 
@@ -276,7 +278,7 @@ func (c *Client) Login(input *UserLoginInput) (UserLoginMutation, error) {
 
 //------------------------------------------------------------------------------------
 
-// CheckLoginStatusQuery ...
+// CheckLoginStatusQuery check the login status query
 type CheckLoginStatusQuery struct {
 	CheckLoginStatus struct {
 		Message graphql.String
@@ -285,7 +287,7 @@ type CheckLoginStatusQuery struct {
 	} `graphql:"checkLoginStatus"`
 }
 
-// CheckLoginStatus ...
+// CheckLoginStatus check the user login status
 func (c *Client) CheckLoginStatus() (CheckLoginStatusQuery, error) {
 	var q CheckLoginStatusQuery
 
@@ -300,7 +302,7 @@ func (c *Client) CheckLoginStatus() (CheckLoginStatusQuery, error) {
 
 //------------------------------------------------------------------------------------
 
-// UserQueryParameter ...
+// UserQueryParameter user query parameters needed to fill
 type UserQueryParameter struct {
 	ID               graphql.String `graphql:"_id"`
 	RegisterInClient graphql.String `json:"registerInClient"`
@@ -310,7 +312,7 @@ type UserQueryParameter struct {
 	// UserLoginHistoryCount graphql.Int     `json:"userLoginHistoryCount,omitempty"`
 }
 
-// UserQuery ...
+// UserQuery user query
 type UserQuery struct {
 	User struct {
 		ID             graphql.String `graphql:"_id"`
@@ -334,7 +336,7 @@ type UserQuery struct {
 	} `graphql:"user(id: $id, registerInClient: $registerInClient)"` // TODO: more parameters according to schema
 }
 
-// User ...
+// User get the user information by user ID
 func (c *Client) User(parameter *UserQueryParameter) (UserQuery, error) {
 	var q UserQuery
 
@@ -354,14 +356,14 @@ func (c *Client) User(parameter *UserQueryParameter) (UserQuery, error) {
 
 //------------------------------------------------------------------------------------
 
-// UsersQueryParameter ...
+// UsersQueryParameter users query parmeters needed to fill
 type UsersQueryParameter struct {
 	RegisterInClient graphql.String `json:"registerInClient,omitempty"`
 	Page             graphql.Int    `json:"page,omitempty"`
 	Count            graphql.Int    `json:"count,omitempty"`
 }
 
-// UsersQuery ...
+// UsersQuery users query
 type UsersQuery struct {
 	Users struct {
 		List []struct {
@@ -379,14 +381,14 @@ type UsersQuery struct {
 	} `graphql:"users(registerInClient: $registerInClient, page: $page, count: $count)"`
 }
 
-// Users ...
+// Users get all of the users information by page and count/page
 func (c *Client) Users(parameter *UsersQueryParameter) (UsersQuery, error) {
 	var q UsersQuery
 
 	variables := map[string]interface{}{
 		"registerInClient": parameter.RegisterInClient,
-		"page":             parameter.Page,
-		"count":            parameter.Count,
+		"page":             parameter.Page,  // default: 1
+		"count":            parameter.Count, // default: 10
 	}
 
 	err := c.client.Query(context.Background(), &q, variables)
@@ -400,14 +402,14 @@ func (c *Client) Users(parameter *UsersQueryParameter) (UsersQuery, error) {
 
 //------------------------------------------------------------------------------------
 
-// RemoveUsersInput ...
+// RemoveUsersInput remove users input parameters needed to fill
 type RemoveUsersInput struct {
 	IDs              []graphql.String `json:"ids"`
 	RegisterInClient graphql.String   `json:"registerInClient"`
 	Operator         graphql.String   `json:"operator"` // FIXME: Mandatory
 }
 
-// RemoveUsersMutation ...
+// RemoveUsersMutation remove users mutation
 type RemoveUsersMutation struct {
 	RemoveUsers []struct {
 		ID      graphql.String `graphql:"_id"`
@@ -416,7 +418,8 @@ type RemoveUsersMutation struct {
 	} `graphql:"removeUsers(ids: $ids, registerInClient: $registerInClient, operator: $operator)"`
 }
 
-// RemoveUsers ... TODO: need to tune the graphql error response json unmarshal
+// RemoveUsers remove users by user ID
+// TODO: need to tune the graphql error response json unmarshal
 func (c *Client) RemoveUsers(input *RemoveUsersInput) (RemoveUsersMutation, error) {
 	var m RemoveUsersMutation
 
@@ -437,7 +440,7 @@ func (c *Client) RemoveUsers(input *RemoveUsersInput) (RemoveUsersMutation, erro
 
 //------------------------------------------------------------------------------------
 
-// UserUpdateInput ...
+// UserUpdateInput user update input parameters needed to fill
 // TODO: no need all fields
 type UserUpdateInput struct {
 	Email         graphql.String  `json:"email,omitempty"`
@@ -456,7 +459,7 @@ type UserUpdateInput struct {
 	// Oauth            graphql.String  `json:"oauth,omitempty"`
 }
 
-// UpdateUserMutation ...
+// UpdateUserMutation update user mutation
 // TODO: no need all fields
 type UpdateUserMutation struct {
 	UpdateUser struct {
@@ -486,7 +489,7 @@ type UpdateUserMutation struct {
 	} `graphql:"updateUser(options: $options)"`
 }
 
-// UpdateUser ...
+// UpdateUser update the user information
 func (c *Client) UpdateUser(input *UserUpdateInput) (UpdateUserMutation, error) {
 	var m UpdateUserMutation
 
@@ -496,6 +499,7 @@ func (c *Client) UpdateUser(input *UserUpdateInput) (UpdateUserMutation, error) 
 			Nickname:         input.Nickname,
 			Phone:            input.Phone,
 			RegisterInClient: input.RegisterInClient,
+			// TODO: more fileds from `UserUpdateInput`
 		},
 	}
 
@@ -510,14 +514,14 @@ func (c *Client) UpdateUser(input *UserUpdateInput) (UpdateUserMutation, error) 
 
 //------------------------------------------------------------------------------------
 
-// SendVerifyEmailInput ...
+// SendVerifyEmailInput sendVerifyEmail input parameters needed to fill
 type SendVerifyEmailInput struct {
 	Email  graphql.String `json:"email"`
 	Client graphql.String `json:"client"`
 	Token  graphql.String `json:"token,omitempty"`
 }
 
-// SendVerifyEmailMutation ...
+// SendVerifyEmailMutation sendVerifyEmail mutation
 type SendVerifyEmailMutation struct {
 	SendVerifyEmail struct {
 		Message graphql.String
@@ -526,7 +530,8 @@ type SendVerifyEmailMutation struct {
 	} `graphql:"sendVerifyEmail(email: $email, client: $client, token: $token)"`
 }
 
-// SendVerifyEmail ...
+// SendVerifyEmail send verify email to user
+// TODO: no need to send verify email if EmailVerified is true
 func (c *Client) SendVerifyEmail(input *SendVerifyEmailInput) error {
 	var m SendVerifyEmailMutation
 
@@ -547,13 +552,13 @@ func (c *Client) SendVerifyEmail(input *SendVerifyEmailInput) error {
 
 //------------------------------------------------------------------------------------
 
-// SendResetPasswordEmailInput ...
+// SendResetPasswordEmailInput sendResetPasswordEmail input parameter needed to fill
 type SendResetPasswordEmailInput struct {
 	Client graphql.String
 	Email  graphql.String
 }
 
-// SendResetPasswordEmailMutation ...
+// SendResetPasswordEmailMutation sendResetPasswordEmail mutation
 type SendResetPasswordEmailMutation struct {
 	SendResetPasswordEmail struct {
 		Message graphql.String
@@ -562,7 +567,7 @@ type SendResetPasswordEmailMutation struct {
 	} `graphql:"sendResetPasswordEmail(client: $client, email: $email)"`
 }
 
-// SendResetPasswordEmail ...
+// SendResetPasswordEmail send reset password email to user
 func (c *Client) SendResetPasswordEmail(input *SendResetPasswordEmailInput) error {
 	var m SendResetPasswordEmailMutation
 
@@ -582,14 +587,14 @@ func (c *Client) SendResetPasswordEmail(input *SendResetPasswordEmailInput) erro
 
 //------------------------------------------------------------------------------------
 
-// VerifyResetPasswordVerifyCodeInput ...
+// VerifyResetPasswordVerifyCodeInput verifyResetPaaswordVerifyCode input parameter needed to fill
 type VerifyResetPasswordVerifyCodeInput struct {
 	Client     graphql.String
 	Email      graphql.String
 	VerifyCode graphql.String
 }
 
-// VerifyResetPasswordVerifyCodeMutation ...
+// VerifyResetPasswordVerifyCodeMutation VerifyResetPasswordVerifyCode mutation
 type VerifyResetPasswordVerifyCodeMutation struct {
 	VerifyResetPasswordVerifyCode struct {
 		Message graphql.String
@@ -598,7 +603,7 @@ type VerifyResetPasswordVerifyCodeMutation struct {
 	} `graphql:"verifyResetPasswordVerifyCode(client: $client, email: $email, verifyCode: $verifyCode)"`
 }
 
-// VerifyResetPasswordVerifyCode ...
+// VerifyResetPasswordVerifyCode verify reset_password_verify_code
 func (c *Client) VerifyResetPasswordVerifyCode(input *VerifyResetPasswordVerifyCodeInput) error {
 	var m VerifyResetPasswordVerifyCodeMutation
 
@@ -619,7 +624,7 @@ func (c *Client) VerifyResetPasswordVerifyCode(input *VerifyResetPasswordVerifyC
 
 //------------------------------------------------------------------------------------
 
-// ChangePasswordInput ...
+// ChangePasswordInput changePassword input parameters needed to fill
 type ChangePasswordInput struct {
 	Email      graphql.String
 	Client     graphql.String
@@ -627,14 +632,14 @@ type ChangePasswordInput struct {
 	VerifyCode graphql.String
 }
 
-// ChangePasswordInputMutation ...
+// ChangePasswordInputMutation changePassword mutation
 type ChangePasswordInputMutation struct {
 	ChangePassword struct {
 		Password graphql.String
 	} `graphql:"changePassword(email: $email,client: $client,password: $password,verifyCode: $verifyCode)"`
 }
 
-// ChangePassword ...
+// ChangePassword change password
 func (c *Client) ChangePassword(input *ChangePasswordInput) error {
 	var m ChangePasswordInputMutation
 
@@ -658,13 +663,13 @@ func (c *Client) ChangePassword(input *ChangePasswordInput) error {
 
 //------------------------------------------------------------------------------------
 
-// ReadOauthListQueryParameter ...
+// ReadOauthListQueryParameter ReadOauthList query parameters needed to fill
 type ReadOauthListQueryParameter struct {
 	ClientID   graphql.String
 	DontGetURL graphql.Boolean
 }
 
-// ReadOauthListQuery ...
+// ReadOauthListQuery ReadOauthList query
 type ReadOauthListQuery struct {
 	ReadOauthList []struct {
 		Name        graphql.String
@@ -679,7 +684,7 @@ type ReadOauthListQuery struct {
 	} `graphql:"ReadOauthList(clientId: $clientId, dontGetURL: $dontGetURL) "`
 }
 
-// ReadOauthList ...
+// ReadOauthList read the oauth list
 func (c *Client) ReadOauthList(parameter *ReadOauthListQueryParameter) (ReadOauthListQuery, error) {
 	var q ReadOauthListQuery
 
