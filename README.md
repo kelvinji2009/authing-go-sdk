@@ -20,11 +20,11 @@ import (
 
 const (
 	clientID  = "5adb75e03055230001023b26"
-	appSerect = "e683d18f9d597317d43d7a6522615b9d"
+	appSecret = "e683d18f9d597317d43d7a6522615b9d"
 )
 
 func main() {
-	client := authing.NewClient(clientID, appSerect, false)
+	client := authing.NewClient(clientID, appSecret, false)
 
 	// >>>Graphql Mutation: register
 	input := authing.UserRegisterInput{
@@ -40,7 +40,7 @@ func main() {
 		printJSON(m)
 	}
 
-	// oauthClient := authing.NewOauthClient(clientID, appSerect, false)
+	// oauthClient := authing.NewOauthClient(clientID, appSecret, false)
 
 	// >>>>Graphql Query: Read OAuth List
 	// readOauthListQueryParameter := authing.ReadOauthListQueryParameter{
