@@ -40,19 +40,20 @@ func main() {
 		printJSON(m)
 	}
 
-	oauthClient := authing.NewOauthClient(clientID, appSerect, false)
+	// oauthClient := authing.NewOauthClient(clientID, appSerect, false)
 
-	readOauthListQueryParameter := authing.ReadOauthListQueryParameter{
-		ClientID:   graphql.String(clientID),
-		DontGetURL: graphql.Boolean(false),
-	}
+	// >>>>Graphql Query: Read OAuth List
+	// readOauthListQueryParameter := authing.ReadOauthListQueryParameter{
+	// 	ClientID:   graphql.String(clientID),
+	// 	DontGetURL: graphql.Boolean(false),
+	// }
 
-	q, err := oauthClient.ReadOauthList(&readOauthListQueryParameter)
-	if err != nil {
-		log.Println(">>>>Read OAuth List failed: " + err.Error())
-	} else {
-		printJSON(q)
-	}
+	// q, err := oauthClient.ReadOauthList(&readOauthListQueryParameter)
+	// if err != nil {
+	// 	log.Println(">>>>Read OAuth List failed: " + err.Error())
+	// } else {
+	// 	printJSON(q)
+	// }
 
 }
 

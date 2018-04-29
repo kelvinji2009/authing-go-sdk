@@ -182,6 +182,7 @@ func main() {
 
 	oauthClient := authing.NewOauthClient(clientID, appSecret, false)
 
+	// >>>>Graphql Query: Read OAuth List
 	readOauthListQueryParameter := authing.ReadOauthListQueryParameter{
 		ClientID:   graphql.String(clientID),
 		DontGetURL: graphql.Boolean(false),
