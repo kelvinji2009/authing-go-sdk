@@ -71,6 +71,7 @@ func printJSON(v interface{}) {
 ### TODO
 
 - [ ] More detailed API usages and documents
+- [ ] Travis CI support
 
 
 ### Thanks
