@@ -34,7 +34,7 @@ GKl64GDcIq3au+aqJQIDAQAB
 
 // Client is a client for interacting with the GraphQL API of `Authing`
 type Client struct {
-	client *graphql.Client
+	Client *graphql.Client
 
 	clientID string
 
@@ -50,7 +50,7 @@ func NewClient(clientID string, appSecret string, isDev bool) *Client {
 		clientID: clientID,
 	}
 
-	if c.client == nil {
+	if c.Client == nil {
 		var endpointURL string
 		if isDev {
 			endpointURL = userEndpointDevURL
@@ -70,7 +70,7 @@ func NewClient(clientID string, appSecret string, isDev bool) *Client {
 
 		httpClient := oauth2.NewClient(context.Background(), src)
 
-		c.client = graphql.NewClient(endpointURL, httpClient)
+		c.Client = graphql.NewClient(endpointURL, httpClient)
 	}
 
 	return c
@@ -82,7 +82,7 @@ func NewOauthClient(clientID string, appSecret string, isDev bool) *Client {
 		clientID: clientID,
 	}
 
-	if c.client == nil {
+	if c.Client == nil {
 		var endpointURL string
 		if isDev {
 			endpointURL = userEndpointDevURL
@@ -110,7 +110,7 @@ func NewOauthClient(clientID string, appSecret string, isDev bool) *Client {
 			endpointURL = oauthEndpointProdURL
 		}
 
-		c.client = graphql.NewClient(endpointURL, httpClient)
+		c.Client = graphql.NewClient(endpointURL, httpClient)
 	}
 
 	return c
@@ -204,7 +204,7 @@ func (c *Client) Register(input *UserRegisterInput) (UserRegisterMutation, error
 		},
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		// log.Println("Register failed: " + err.Error())
@@ -266,7 +266,7 @@ func (c *Client) Login(input *UserLoginInput) (UserLoginMutation, error) {
 		"verifyCode":       input.VerifyCode,
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		// log.Println("Login failed: " + err.Error())
@@ -291,7 +291,7 @@ type CheckLoginStatusQuery struct {
 func (c *Client) CheckLoginStatus() (CheckLoginStatusQuery, error) {
 	var q CheckLoginStatusQuery
 
-	err := c.client.Query(context.Background(), &q, nil)
+	err := c.Client.Query(context.Background(), &q, nil)
 	if err != nil {
 		// log.Println("Check login status failed: " + err.Error())
 		return q, err
@@ -345,7 +345,7 @@ func (c *Client) User(parameter *UserQueryParameter) (UserQuery, error) {
 		"registerInClient": parameter.RegisterInClient,
 	}
 
-	err := c.client.Query(context.Background(), &q, variables)
+	err := c.Client.Query(context.Background(), &q, variables)
 
 	if err != nil {
 		return q, err
@@ -391,7 +391,7 @@ func (c *Client) Users(parameter *UsersQueryParameter) (UsersQuery, error) {
 		"count":            parameter.Count, // default: 10
 	}
 
-	err := c.client.Query(context.Background(), &q, variables)
+	err := c.Client.Query(context.Background(), &q, variables)
 
 	if err != nil {
 		return q, err
@@ -406,7 +406,8 @@ func (c *Client) Users(parameter *UsersQueryParameter) (UsersQuery, error) {
 type RemoveUsersInput struct {
 	IDs              []graphql.String `json:"ids"`
 	RegisterInClient graphql.String   `json:"registerInClient"`
-	Operator         graphql.String   `json:"operator"` // FIXME: Mandatory
+	// Operator should be your `Authing.cn` account ID
+	Operator graphql.String `json:"operator"` // no more Mandatory in the latest version
 }
 
 // RemoveUsersMutation remove users mutation
@@ -429,7 +430,7 @@ func (c *Client) RemoveUsers(input *RemoveUsersInput) (RemoveUsersMutation, erro
 		"operator":         input.Operator,
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		return m, err
@@ -443,6 +444,7 @@ func (c *Client) RemoveUsers(input *RemoveUsersInput) (RemoveUsersMutation, erro
 // UserUpdateInput user update input parameters needed to fill
 // TODO: no need all fields
 type UserUpdateInput struct {
+	ID            graphql.String  `json:"_id"` // Mandotory in struct
 	Email         graphql.String  `json:"email,omitempty"`
 	Unionid       graphql.String  `json:"unionid,omitempty"`
 	EmailVerified graphql.Boolean `json:"emailVerified,omitempty"`
@@ -495,6 +497,7 @@ func (c *Client) UpdateUser(input *UserUpdateInput) (UpdateUserMutation, error) 
 
 	variables := map[string]interface{}{
 		"options": UserUpdateInput{
+			ID:               input.ID,
 			Username:         input.Username,
 			Nickname:         input.Nickname,
 			Phone:            input.Phone,
@@ -503,7 +506,7 @@ func (c *Client) UpdateUser(input *UserUpdateInput) (UpdateUserMutation, error) 
 		},
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		return m, err
@@ -541,7 +544,7 @@ func (c *Client) SendVerifyEmail(input *SendVerifyEmailInput) error {
 		"token":  input.Token,
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		return err
@@ -576,7 +579,7 @@ func (c *Client) SendResetPasswordEmail(input *SendResetPasswordEmailInput) erro
 		"client": input.Client,
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		return err
@@ -613,7 +616,7 @@ func (c *Client) VerifyResetPasswordVerifyCode(input *VerifyResetPasswordVerifyC
 		"verifyCode": input.VerifyCode,
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		return err
@@ -652,7 +655,7 @@ func (c *Client) ChangePassword(input *ChangePasswordInput) error {
 		"password":   password,
 	}
 
-	err := c.client.Mutate(context.Background(), &m, variables)
+	err := c.Client.Mutate(context.Background(), &m, variables)
 
 	if err != nil {
 		return err
@@ -693,7 +696,7 @@ func (c *Client) ReadOauthList(parameter *ReadOauthListQueryParameter) (ReadOaut
 		"dontGetURL": parameter.DontGetURL,
 	}
 
-	err := c.client.Query(context.Background(), &q, variables)
+	err := c.Client.Query(context.Background(), &q, variables)
 
 	if err != nil {
 		return q, err
